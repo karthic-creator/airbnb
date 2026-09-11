@@ -5,8 +5,8 @@
 // Fill these in from Firebase Console → Project settings → Your apps → Web app.
 // Leave blank to disable sync (the app works fine locally either way).
 export const firebaseConfig = {
-  projectId: '',
-  apiKey: '',
+  projectId: 'compass-sync-eb9d5',
+  apiKey: 'AIzaSyDHIQ_29gDlGTUZlTf5qA2NSXJ7Q0Tz3HY',
 };
 
 export const EMAIL_DIGESTS_COLLECTION = 'emailDigests';
