@@ -53,6 +53,25 @@ npm run ios      # requires a Mac
 npm run web
 ```
 
+## Installing on iPhone as a PWA (no Apple Developer account)
+
+Building a real, signed iOS app needs an Apple Developer account ($99/year). To skip that
+entirely, Compass can be installed straight from Safari as a Progressive Web App — a real
+home-screen icon, full-screen (no browser chrome), and it keeps working offline after the
+first load, all for free:
+
+1. Push to `main` (or run the **Deploy PWA to GitHub Pages** workflow manually from the
+   Actions tab, on any branch) — it exports the web build and deploys it to GitHub Pages.
+2. One-time repo setting: **Settings → Pages → Build and deployment → Source: "GitHub
+   Actions"**. After that the workflow's URL (shown in the Pages settings and in the
+   workflow run) is live.
+3. On your iPhone, open that URL in **Safari** (must be Safari, not Chrome — iOS only
+   supports "Add to Home Screen" installs from Safari), tap the Share icon, then
+   **Add to Home Screen**.
+
+That's it — Compass now has its own icon on your home screen and opens full-screen like a
+native app. Re-running the workflow (e.g. after a `main` push) updates it in place.
+
 ## Integration roadmap
 
 The app is architected so each item carries a `source` (`manual`, `google_calendar`,
