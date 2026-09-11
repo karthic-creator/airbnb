@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Paste this into Firebase Console → Firestore Database → Rules → Publish.
+//
+// Deliberately tight: the emailDigests collection accepts new documents in
+// exactly one shape (create only — no update or delete, ever), and every
+// other path is fully denied. Nobody, including a client with just the
+// public web API key, can read/write anything outside that one shape.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /emailDigests/{digestId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['summary', 'createdAt', 'emailCount', 'archivedCount'])
+                    && request.resource.data.summary is string
+                    && request.resource.data.summary.size() <= 500
+                    && request.resource.data.emailCount is int
+                    && request.resource.data.archivedCount is int
+                    && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

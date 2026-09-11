@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Item } from './types';
 import { generateSeedItems } from './seed';
+import { fetchEmailDigests } from './sync';
 
 const STORAGE_KEY = 'compass:items:v1';
 
@@ -22,17 +23,26 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          setItems(JSON.parse(raw));
-        } else {
-          const seeded = generateSeedItems();
-          setItems(seeded);
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-        }
-      } finally {
-        setLoading(false);
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      let current: Item[];
+      if (raw) {
+        current = JSON.parse(raw);
+      } else {
+        current = generateSeedItems();
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+      }
+      setItems(current);
+      setLoading(false);
+
+      // Best-effort: pull in any new email digests and fold them into the
+      // persisted item list (deduped by id) so they behave like any other
+      // item from then on — toggle/delete works normally.
+      const digests = await fetchEmailDigests();
+      const newOnes = digests.filter((d) => !current.some((i) => i.id === d.id));
+      if (newOnes.length > 0) {
+        const merged = [...current, ...newOnes];
+        setItems(merged);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }
     })();
   }, []);

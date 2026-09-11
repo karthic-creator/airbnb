@@ -72,6 +72,29 @@ first load, all for free:
 That's it — Compass now has its own icon on your home screen and opens full-screen like a
 native app. Re-running the workflow (e.g. after a `main` push) updates it in place.
 
+## Email digest sync (Firestore)
+
+An external routine (running on a 4-hourly schedule) summarizes your Gmail inbox, archives
+non-actionable mail, and — once configured — writes a short digest to Firestore. Compass
+reads that on launch and folds it in as a normal item (source `email_digest`), so it just
+shows up on the Today timeline like anything else, without needing you to open Gmail.
+
+Compass talks to Firestore over its plain REST API with `fetch()` — no Firebase SDK
+dependency, and no secret involved: `src/firebaseConfig.ts` holds only the public
+`projectId`/`apiKey` (these identify the project, they don't authorize anything — security
+comes entirely from `firestore.rules`, which allow reading everything in `emailDigests` but
+only *creating* new documents in one exact shape, never updating or deleting, and deny
+every other path outright). To enable it:
+
+1. Create a Firebase project (console.firebase.google.com) with Firestore enabled
+2. Paste `firestore.rules` into Firestore → Rules → Publish
+3. Fill in `projectId`/`apiKey` from Project settings → Your apps → Web app into
+   `src/firebaseConfig.ts`
+4. Redeploy the PWA
+
+Leave `firebaseConfig.ts` blank and Compass just skips sync entirely — everything else
+works the same either way.
+
 ## Integration roadmap
 
 The app is architected so each item carries a `source` (`manual`, `google_calendar`,
