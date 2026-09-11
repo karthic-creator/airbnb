@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Item } from '@/types';
 import { categories, palette } from '@/theme';
@@ -6,10 +6,18 @@ import { formatTime } from '@/time';
 import { isDoneOn } from '@/agenda';
 import { useItems } from '@/store';
 
+const NOTES_COLLAPSED_LINES = 4;
+// Rough proxy for "likely overflows the collapsed line clamp" — RN's Text
+// truncation doesn't report back whether it actually clipped, so we use
+// length as a stand-in rather than a brittle onTextLayout measurement.
+const NOTES_LONG_THRESHOLD = 150;
+
 export function ItemRow({ item, dateISO }: { item: Item; dateISO: string }) {
   const { toggleDone, deleteItem } = useItems();
+  const [expanded, setExpanded] = useState(false);
   const done = isDoneOn(item, dateISO);
   const cat = categories[item.category];
+  const notesIsLong = (item.notes?.length ?? 0) > NOTES_LONG_THRESHOLD;
 
   const onLongPress = () => {
     Alert.alert(item.title, 'Remove this from your plan?', [
@@ -34,9 +42,12 @@ export function ItemRow({ item, dateISO }: { item: Item; dateISO: string }) {
         </Text>
         <Text style={[styles.category, { color: cat.color }]}>{cat.label}</Text>
         {item.notes ? (
-          <Text style={styles.notes} numberOfLines={4}>
-            {item.notes}
-          </Text>
+          <Pressable onPress={() => setExpanded((e) => !e)} hitSlop={4}>
+            <Text style={styles.notes} numberOfLines={expanded ? undefined : NOTES_COLLAPSED_LINES}>
+              {item.notes}
+            </Text>
+            {notesIsLong && <Text style={styles.expandLink}>{expanded ? 'Show less ▲' : 'Show more ▼'}</Text>}
+          </Pressable>
         ) : null}
       </View>
       <View style={[styles.check, done && { backgroundColor: cat.color, borderColor: cat.color }]}>
@@ -74,6 +85,7 @@ const styles = StyleSheet.create({
   titleDone: { textDecorationLine: 'line-through', color: palette.textMuted },
   category: { fontSize: 12, fontWeight: '700', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.4 },
   notes: { fontSize: 13, color: palette.textMuted, marginTop: 6, lineHeight: 18 },
+  expandLink: { fontSize: 12, fontWeight: '700', color: palette.text, marginTop: 4 },
   check: {
     width: 30,
     height: 30,
