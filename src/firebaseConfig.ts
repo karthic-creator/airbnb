@@ -10,3 +10,4 @@ export const firebaseConfig = {
 };
 
 export const EMAIL_DIGESTS_COLLECTION = 'emailDigests';
+export const FIREFLIES_NOTES_COLLECTION = 'firefliesNotes';

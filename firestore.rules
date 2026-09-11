@@ -2,10 +2,10 @@ rules_version = '2';
 
 // Paste this into Firebase Console → Firestore Database → Rules → Publish.
 //
-// Deliberately tight: the emailDigests collection accepts new documents in
-// exactly one shape (create only — no update or delete, ever), and every
-// other path is fully denied. Nobody, including a client with just the
-// public web API key, can read/write anything outside that one shape.
+// Deliberately tight: each collection accepts new documents in exactly one
+// shape (create only — no update or delete, ever), and every other path is
+// fully denied. Nobody, including a client with just the public web API
+// key, can read/write anything outside those shapes.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /emailDigests/{digestId} {
@@ -15,6 +15,20 @@ service cloud.firestore {
                     && request.resource.data.summary.size() <= 500
                     && request.resource.data.emailCount is int
                     && request.resource.data.archivedCount is int
+                    && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+
+    match /firefliesNotes/{noteId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['title', 'summary', 'actionItems', 'meetingDate', 'createdAt'])
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() <= 200
+                    && request.resource.data.summary is string
+                    && request.resource.data.summary.size() <= 1500
+                    && request.resource.data.actionItems is string
+                    && request.resource.data.actionItems.size() <= 1000
+                    && request.resource.data.meetingDate is timestamp
                     && request.resource.data.createdAt is timestamp;
       allow update, delete: if false;
     }

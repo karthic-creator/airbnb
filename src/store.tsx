@@ -2,7 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Item } from './types';
 import { generateSeedItems } from './seed';
-import { fetchEmailDigests } from './sync';
+import { fetchEmailDigests, fetchMeetingNotes } from './sync';
+import type { ItemSource } from './types';
+
+const SYNCED_SOURCES: ItemSource[] = ['email_digest', 'meeting_notes'];
 
 const STORAGE_KEY = 'compass:items:v1';
 
@@ -34,19 +37,20 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
       setItems(current);
       setLoading(false);
 
-      // Best-effort: refresh email digests from source on every load (not
-      // just add new ones) so a routine/format change is reflected without
-      // requiring a local data reset — but carry over completedDates so
-      // toggling one off doesn't get undone by a refresh.
-      const digests = await fetchEmailDigests();
-      if (digests.length > 0) {
+      // Best-effort: refresh synced items (email digests, meeting notes)
+      // from source on every load (not just add new ones) so a routine or
+      // format change is reflected without requiring a local data reset —
+      // but carry over completedDates so toggling one off isn't undone.
+      const [digests, meetingNotes] = await Promise.all([fetchEmailDigests(), fetchMeetingNotes()]);
+      const synced = [...digests, ...meetingNotes];
+      if (synced.length > 0) {
         const existingById = new Map(current.map((i) => [i.id, i]));
-        const freshDigests = digests.map((d) => ({
+        const freshSynced = synced.map((d) => ({
           ...d,
           completedDates: existingById.get(d.id)?.completedDates ?? d.completedDates,
         }));
-        const nonDigestItems = current.filter((i) => i.source !== 'email_digest');
-        const merged = [...nonDigestItems, ...freshDigests];
+        const unsyncedItems = current.filter((i) => !SYNCED_SOURCES.includes(i.source));
+        const merged = [...unsyncedItems, ...freshSynced];
         setItems(merged);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }

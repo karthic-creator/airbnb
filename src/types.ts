@@ -2,7 +2,7 @@ export type Category = 'business' | 'family' | 'personal' | 'routine';
 
 export type Recurrence = 'none' | 'daily' | 'weekdays' | 'weekly';
 
-export type ItemSource = 'manual' | 'google_calendar' | 'whatsapp' | 'phone_call' | 'wearable' | 'email_digest';
+export type ItemSource = 'manual' | 'google_calendar' | 'whatsapp' | 'phone_call' | 'wearable' | 'email_digest' | 'meeting_notes';
 
 export interface Item {
   id: string;
