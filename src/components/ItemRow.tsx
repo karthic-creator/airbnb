@@ -33,6 +33,11 @@ export function ItemRow({ item, dateISO }: { item: Item; dateISO: string }) {
           {item.title}
         </Text>
         <Text style={[styles.category, { color: cat.color }]}>{cat.label}</Text>
+        {item.notes ? (
+          <Text style={styles.notes} numberOfLines={4}>
+            {item.notes}
+          </Text>
+        ) : null}
       </View>
       <View style={[styles.check, done && { backgroundColor: cat.color, borderColor: cat.color }]}>
         {done && <Text style={styles.checkMark}>✓</Text>}
@@ -68,6 +73,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', color: palette.text },
   titleDone: { textDecorationLine: 'line-through', color: palette.textMuted },
   category: { fontSize: 12, fontWeight: '700', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.4 },
+  notes: { fontSize: 13, color: palette.textMuted, marginTop: 6, lineHeight: 18 },
   check: {
     width: 30,
     height: 30,

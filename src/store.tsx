@@ -34,13 +34,19 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
       setItems(current);
       setLoading(false);
 
-      // Best-effort: pull in any new email digests and fold them into the
-      // persisted item list (deduped by id) so they behave like any other
-      // item from then on — toggle/delete works normally.
+      // Best-effort: refresh email digests from source on every load (not
+      // just add new ones) so a routine/format change is reflected without
+      // requiring a local data reset — but carry over completedDates so
+      // toggling one off doesn't get undone by a refresh.
       const digests = await fetchEmailDigests();
-      const newOnes = digests.filter((d) => !current.some((i) => i.id === d.id));
-      if (newOnes.length > 0) {
-        const merged = [...current, ...newOnes];
+      if (digests.length > 0) {
+        const existingById = new Map(current.map((i) => [i.id, i]));
+        const freshDigests = digests.map((d) => ({
+          ...d,
+          completedDates: existingById.get(d.id)?.completedDates ?? d.completedDates,
+        }));
+        const nonDigestItems = current.filter((i) => i.source !== 'email_digest');
+        const merged = [...nonDigestItems, ...freshDigests];
         setItems(merged);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }

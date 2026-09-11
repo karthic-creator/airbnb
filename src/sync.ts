@@ -17,10 +17,6 @@ function fieldToString(field?: FirestoreField): string {
   return field?.stringValue ?? '';
 }
 
-function fieldToInt(field?: FirestoreField): number {
-  return field?.integerValue ? parseInt(field.integerValue, 10) : 0;
-}
-
 /**
  * Fetches email digests written by the recurring inbox-cleanup routine and
  * turns them into read-only Today items. Best-effort: any failure (no
@@ -46,12 +42,10 @@ export async function fetchEmailDigests(): Promise<Item[]> {
       const fields = doc.fields ?? {};
       const summary = fieldToString(fields.summary) || 'Email digest';
       const createdAt = fields.createdAt?.timestampValue ? new Date(fields.createdAt.timestampValue) : new Date();
-      const emailCount = fieldToInt(fields.emailCount);
-      const archivedCount = fieldToInt(fields.archivedCount);
 
       return {
         id: `digest-${docId}`,
-        title: summary,
+        title: 'Inbox digest',
         category: 'business',
         icon: '📧',
         date: todayISO(createdAt),
@@ -60,7 +54,7 @@ export async function fetchEmailDigests(): Promise<Item[]> {
         recurrence: 'none',
         completedDates: [],
         source: 'email_digest',
-        notes: `${emailCount} new emails, ${archivedCount} archived automatically.`,
+        notes: summary,
       };
     });
   } catch {
